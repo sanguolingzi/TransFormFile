@@ -8,11 +8,13 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PptToImage {
     private boolean licenseResult = false;
 
-    private int picCount = 1;
+    private int picCount = 3;
 
     private PdfOptions pdfOptions;
 
@@ -77,19 +79,17 @@ public class PptToImage {
             file = new File(fileDir.getPath()+File.separator+subFileName(fileName)+".pdf");// 输出pdf路径
             fileOS = new FileOutputStream(file);
 
-            /*
-            int pptSize = pres.getSlides().size();
-            if(pptSize < picCount){
-                picCount = pptSize;
-            }
-            */
+
 
             auxPresentation  = new Presentation();
             //新生成的对象中会默认给一个空白页
             auxPresentation.getSlides().removeAt(0);
             slides = pres.getSlides();
             //只加载小于initSize数量的ppt页数
-            for(int i=0;i<picCount;i++){
+
+            int size = slides.size();
+            size=size<picCount?size:picCount;
+            for(int i=0;i<size;i++){
                 auxPresentation.getSlides().insertClone(i,slides.get_Item(i));
             }
             auxPresentation.save(fileOS,SaveFormat.Pdf,pdfOptions);
@@ -147,26 +147,38 @@ public class PptToImage {
         PDFRenderer renderer = null;
         File pathFile = null;
         File tempFile = null;
+        List<BufferedImage> imageList = new ArrayList<BufferedImage>();
         try {
             doc = PDDocument.load(srcPdf, MemoryUsageSetting.setupTempFileOnly());
             renderer = new PDFRenderer(doc);
-            //int pageCount = doc.getNumberOfPages();
+            int pageCount = doc.getNumberOfPages();
             //图片存放在名为pptName+"dir"的文件夹下
-            //for(int i=0;i<pageCount;i++){
-                //if(i >= picCount){
-                //    break;
-                //}
-            BufferedImage image = renderer.renderImageWithDPI(0, 96);
-            String path=srcPdf.getParent()+File.separator;
-            pathFile = new File(path);
-            if(pathFile.exists()==false){
-                pathFile.mkdirs();
+            for(int i=0;i<pageCount;i++) {
+                if(i > 2)
+                    break;
+
+                if(i == 0){
+                    BufferedImage image = renderer.renderImageWithDPI(0, 96);
+                    String path=srcPdf.getParent()+File.separator;
+                    pathFile = new File(path);
+                    if(pathFile.exists()==false){
+                        pathFile.mkdirs();
+                    }
+
+
+                    tempFile = new File(pathFile.getPath()+File.separator+subFileName(srcPdf.getName())+"_0.png");
+                    ImageIO.write(image, "PNG", tempFile);
+                    imageList.add(image);
+                    tempFile = null;
+                }else{
+                    BufferedImage image = renderer.renderImageWithDPI(i, 96);
+                    imageList.add(image);
+                }
             }
-            tempFile = new File(pathFile.getPath()+File.separator+subFileName(srcPdf.getName())+"_0.png");
-            ImageIO.write(image, "PNG", tempFile);
-            //System.out.println("create img success!");
+
+            tempFile = new File(pathFile.getPath()+File.separator+subFileName(srcPdf.getName())+"_1.png");
+            MergeImage.merge(imageList,tempFile);
             pathFile  = null;
-            image = null;
             tempFile = null;
             //}
         } catch (Exception e) {
@@ -200,5 +212,14 @@ public class PptToImage {
     public boolean pptToImage(String fileName,String pdfDestPath) throws Exception{
         File pdf = pptToPdf(fileName,pdfDestPath);
         return pdfToImg(pdf);
+    }
+
+    public static void main(String[] ars)throws Exception{
+
+        File file = new File(ars[0]);
+        new PptToImage().pdfToImg(file);
+        //new PptToImage().pptToImage("C:\\Users\\Administrator\\Desktop\\ZXXKCOM20180113085930089618.pdf","C:\\Users\\Administrator\\Desktop\\");
+
+
     }
 }

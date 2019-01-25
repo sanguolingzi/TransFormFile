@@ -6,10 +6,11 @@ import com.aspose.words.ImageSaveOptions;
 import com.aspose.words.License;
 import com.aspose.words.SaveFormat;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.imageio.stream.ImageInputStream;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DocToImage {
 
@@ -31,7 +32,7 @@ public class DocToImage {
             options.setPrettyFormat(true);
             options.setUseAntiAliasing(true);
             //默认转换第一页
-            options.setPageIndex(0);
+            //options.setPageIndex(0);
             options.setUseHighQualityRendering(true);
         } catch (Exception e) {
             //e.printStackTrace();
@@ -62,6 +63,7 @@ public class DocToImage {
             System.out.println("----lincese error---");
             return;
         }
+        List<BufferedImage> imageList = new ArrayList<BufferedImage>();
         Document doc = null;
         FileOutputStream os = null;
         File file = null;
@@ -75,24 +77,41 @@ public class DocToImage {
             }
 
             //图片转换设置
-            //int pageCount = doc.getPageCount();
+            int pageCount = doc.getPageCount();
 
             fileDir = new File(outPath);
             if(!fileDir.exists()){
                 fileDir.mkdirs();
             }
 
-            //for(int i=0;i<pageCount;i++){
 
-                //if(i>0){
-                //    break;
-                //}
-            file = new File(fileDir.getPath()+File.separator+subFileName(fileName)+"_0.png"); //生成目标图片
-            os = new FileOutputStream(file);
-            //设置转换第几页图片
-            doc.save(os, options);// 全面支持DOC, DOCX, OOXML, RTF HTML,
-            os.flush();
-            os.close();
+            for(int i=0;i<pageCount;i++) {
+                if (i > 2)
+                    break;
+
+                if (i == 0) {
+                    file = new File(fileDir.getPath() + File.separator + subFileName(fileName) + "_0.png"); //生成目标图片
+                    os = new FileOutputStream(file);
+                    //设置转换第几页图片
+                    options.setPageIndex(i);
+                    doc.save(os, options);// 全面支持DOC, DOCX, OOXML, RTF HTML,
+                    os.flush();
+                    os.close();
+                }
+
+                OutputStream output = new ByteArrayOutputStream();
+                options.setPageIndex(i);
+
+                doc.save(output, options);
+                ImageInputStream imageInputStream = javax.imageio.ImageIO.createImageInputStream(parse(output));
+                imageList.add(javax.imageio.ImageIO.read(imageInputStream));
+            }
+
+            file = new File(fileDir.getPath() + File.separator + subFileName(fileName) + "_1.png"); //压缩图片
+            MergeImage.merge(imageList,file);
+
+
+            return;
             //}
             //long now = System.currentTimeMillis();
             //System.out.println(fileName+" doc to image 转换已完成,共耗时：" + ((now - old) / 1000.0) + "秒"); // 转化用时
@@ -109,5 +128,20 @@ public class DocToImage {
             fileDir = null;
             System.gc();
         }
+    }
+
+    //outputStream转inputStream
+    public static ByteArrayInputStream parse(OutputStream out) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        baos = (ByteArrayOutputStream) out;
+        ByteArrayInputStream swapStream = new ByteArrayInputStream(baos.toByteArray());
+        return swapStream;
+    }
+
+    public static void main(String[] args) throws Exception{
+
+        DocToImage docToImage = new DocToImage();
+        docToImage.doc2png("C:\\Users\\Administrator\\Desktop\\测试文件\\doc\\537994594793689088.doc","C:\\Users\\Administrator\\Desktop");
+
     }
 }

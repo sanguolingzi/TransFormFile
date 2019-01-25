@@ -105,6 +105,74 @@ public class VideoInfo {
 
         }
 
+
+    /****
+     * 获取指定时间内的图片
+     * @param videoFilename:视频路径
+     * @param thumbFilename:图片保存路径
+     * @param width:图片长
+     * @param height:图片宽
+     * @param hour:指定时
+     * @param min:指定分
+     * @param sec:指定秒
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public void getThumb(String videoFilename, String thumbFilename, int width,
+                         int height, int hour, int min, float sec) throws Exception
+    {
+
+        InputStream stderr = null;
+        InputStreamReader isr = null;
+        BufferedReader br = null;
+        Process process = null;
+        try{
+
+            if(isWindowws()){
+                ProcessBuilder processBuilder = new ProcessBuilder(ffmpegApp, "-y",
+                        "-i", videoFilename, "-vframes", "1", "-ss", hour + ":" + min
+                        + ":" + sec, "-f", "mjpeg", "-s", width + "*" + height,
+                        "-an", thumbFilename);
+                process = processBuilder.start();
+            }else if(isLinux()){
+                String command = "ffmpeg -y -i"+ videoFilename+ " -vframes 1 -ss "+hour + ":" + min + ":" + sec+" -f mjpeg -s "+width + "*" + height+" -an "+thumbFilename;
+                Runtime rt = Runtime.getRuntime();
+                process =rt.exec(command);
+
+            }
+
+            stderr = process.getErrorStream();
+            isr = new InputStreamReader(stderr);
+            br = new BufferedReader(isr);
+            String line;
+            while ((line = br.readLine()) != null)
+                ;
+            process.waitFor();
+        }catch (Exception e){
+            throw e;
+        }finally {
+            if(br != null){
+                br.close();
+                br = null;
+            }
+
+            if(isr != null){
+                isr.close();
+                isr = null;
+            }
+
+            if(stderr != null){
+                stderr.close();
+                stderr = null;
+            }
+
+            if(process != null){
+                process.destroy();
+                process = null;
+            }
+        }
+    }
+
         /**
          *
          * @param videoFilename
@@ -196,6 +264,24 @@ public class VideoInfo {
             }
             return ".mp4";
         }
+
+    private boolean isWindowws(){
+        String os = System.getProperty("os.name");
+        if(os != null
+                && os.toLowerCase().indexOf("windows") >= 0){
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isLinux(){
+        String os = System.getProperty("os.name");
+        if(os != null
+                && os.toLowerCase().indexOf("linux") >= 0){
+            return true;
+        }
+        return false;
+    }
         public String getFfmpegApp()
         {
             return ffmpegApp;
@@ -261,7 +347,7 @@ public class VideoInfo {
             VideoInfo videoInfo = new VideoInfo("D:\\ChromeCoreDownloads\\ffmpeg-20181128-b9aff7a-win64-static\\ffmpeg-20181128-b9aff7a-win64-static\\bin\\ffmpeg.exe");
             try
             {
-                videoInfo.getInfo("C:\\Users\\Administrator\\Desktop\\ZXXK200631493811993.avi");
+                videoInfo.getInfo("C:\\Users\\Administrator\\Desktop\\ZXXK20064271749202677.avi");
                 System.out.println(videoInfo);
 
                 //截取一分钟 那么判断当前视频时长是否有一分钟长
@@ -274,9 +360,13 @@ public class VideoInfo {
                         ssTimeEnd = "00:00:"+new Float(videoSec).intValue();
                     }
                 }
-                videoInfo.getThumbVideo("C:\\Users\\Administrator\\Desktop\\ZXXK200631493811993.avi",
-                        "C:\\Users\\Administrator\\Desktop\\ZXXK200631493811993_0.avi",
+                videoInfo.getThumbVideo("C:\\Users\\Administrator\\Desktop\\ZXXK20064271749202677.avi",
+                        "C:\\Users\\Administrator\\Desktop\\ZXXK20064271749202677_0.avi",
                         ssTimeStart,ssTimeEnd);
+
+
+                videoInfo.getThumb("C:\\Users\\Administrator\\Desktop\\ZXXK20064271749202677.avi",
+                        "C:\\Users\\Administrator\\Desktop\\ZXXK200631493811993_1.png",400,400,0,0,5);
             } catch (Exception e)
             {
                 e.printStackTrace();
