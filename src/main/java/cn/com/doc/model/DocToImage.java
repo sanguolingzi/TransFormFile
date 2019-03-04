@@ -141,7 +141,7 @@ public class DocToImage {
     public static void main(String[] args) throws Exception{
 
         DocToImage docToImage = new DocToImage();
-        docToImage.doc2png("C:\\Users\\Administrator\\Desktop\\测试文件\\doc\\537994594793689088.doc","C:\\Users\\Administrator\\Desktop");
+        docToImage.doc2png("C:\\Users\\Administrator\\Desktop\\ZXXKCOM201201300154205442563.doc","C:\\Users\\Administrator\\Desktop");
 
     }
 }

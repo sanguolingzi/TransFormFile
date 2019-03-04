@@ -131,7 +131,7 @@ public class PptToImage {
      * @param srcPdf
      * @return
      */
-    private boolean pdfToImg(File srcPdf) throws Exception{
+    public boolean pdfToImg(File srcPdf) throws Exception{
         if(srcPdf == null){
             System.err.println("pdf file is null");
             return false;
@@ -216,9 +216,10 @@ public class PptToImage {
 
     public static void main(String[] ars)throws Exception{
 
-        File file = new File(ars[0]);
+        //File file = new File(ars[0]);
+        File file = new File("C:\\Users\\Administrator\\Desktop\\aabbcc.pdf");
         new PptToImage().pdfToImg(file);
-        //new PptToImage().pptToImage("C:\\Users\\Administrator\\Desktop\\ZXXKCOM20180113085930089618.pdf","C:\\Users\\Administrator\\Desktop\\");
+        //new PptToImage().pptToImage("C:\\Users\\Administrator\\Desktop\\ZXXKCOM2007111513432354355.ppt","C:\\Users\\Administrator\\Desktop\\");
 
 
     }
